@@ -1,0 +1,16 @@
+# Backend
+.env
+backend/.venv/
+backend/__pycache__/
+backend/**/__pycache__/
+backend/test-results/
+backend/.pytest_cache/
+
+# Frontend
+frontend/node_modules/
+frontend/.next/
+frontend/.env.local
+
+# OS / editor
+.DS_Store
+*.log

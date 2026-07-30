@@ -1,0 +1,18 @@
+[
+  {
+    "id": "5d1f21ae-f65b-4fde-a917-308da262fbf4",
+    "name": "Dilane Younga",
+    "email": "dilaneyounga@gmail.com",
+    "preferred_tags": [
+      "museum",
+      "art",
+      "history",
+      "culture",
+      "church",
+      "landmark",
+      "photography"
+    ],
+    "budget_level": "medium",
+    "password_hash": "$2b$12$MvdrPIMbTVlwIZjpgovDru8SJeR5TCg5PBrM0WNpJJN8GrsZKvVgW"
+  }
+]
