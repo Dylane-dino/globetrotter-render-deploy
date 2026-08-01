@@ -13,6 +13,7 @@ import AddToItineraryModal from "@/components/AddToItineraryModal";
 import * as api from "@/lib/api";
 import type { Destination } from "@/lib/types";
 import DestinationMap from "@/components/DestinationMap";
+import TravelPlanner from "@/components/TravelPlanner";
 
 const CATEGORY_LABELS: Record<string, string> = {
   nature: "Nature",
@@ -179,6 +180,7 @@ function DestinationDetailContent() {
             </div>
           </aside>
         </div>
+        <TravelPlanner destination={destination} />
         <DestinationMap name={destination.name} latitude={destination.lat} longitude={destination.lng} />
       </main>
 

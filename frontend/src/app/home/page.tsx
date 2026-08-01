@@ -28,6 +28,7 @@ function HomeContent() {
   const [allDestinations, setAllDestinations] = useState<Destination[]>([]);
   const [recommended, setRecommended] = useState<RecommendedDestination[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState("");
   const exploreRef = useRef<HTMLDivElement>(null);
@@ -35,6 +36,8 @@ function HomeContent() {
   useEffect(() => {
     if (!user) return;
     let cancelled = false;
+    setIsLoading(true);
+    setError(null);
 
     Promise.all([
       api.getDestinations(),
@@ -42,8 +45,19 @@ function HomeContent() {
     ])
       .then(([destinations, recs]) => {
         if (cancelled) return;
+        // Keep this defensive check next to the state assignment as well as
+        // in the API client. It makes the render contract explicit.
+        if (!Array.isArray(destinations) || !Array.isArray(recs)) {
+          throw new Error("The server returned invalid destination data.");
+        }
         setAllDestinations(destinations);
         setRecommended(recs);
+      })
+      .catch((requestError: unknown) => {
+        if (cancelled) return;
+        setAllDestinations([]);
+        setRecommended([]);
+        setError(requestError instanceof Error ? requestError.message : "Destinations could not be loaded.");
       })
       .finally(() => {
         if (!cancelled) setIsLoading(false);
@@ -94,6 +108,11 @@ function HomeContent() {
           </div>
         ) : (
           <>
+            {error && (
+              <div className="mb-8 rounded-card border border-laterite/20 bg-laterite/5 p-4 text-sm text-ink/75" role="alert">
+                {error} Please refresh or try again shortly.
+              </div>
+            )}
             {popular.length > 0 && (
               <section className="mb-14">
                 <div className="flex items-center justify-between mb-5">
