@@ -6,6 +6,22 @@
     "location_tag": "palis de congres",
     "title": "vacation",
     "body": "in is actually a nice place to visit",
+    "comments": [
+      {
+        "id": "e7424eab-9ef0-4d91-b717-2559f6aa0275",
+        "user_name": "younga dilane",
+        "timestamp": "2026-08-02T10:06:02.861319+00:00",
+        "body": "actually i also visited the place and it was a nice experince"
+      }
+    ]
+  },
+  {
+    "id": "8902d8e2-cc5a-440a-aac2-3cffbe80f909",
+    "user_name": "jhon taga",
+    "timestamp": "2026-08-02T10:12:33.366315+00:00",
+    "location_tag": "star moul",
+    "title": "experience",
+    "body": "a nice place to eat",
     "comments": []
   }
 ]

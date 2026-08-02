@@ -10,5 +10,21 @@
       }
     ],
     "shared_with": []
+  },
+  {
+    "id": "44c45b2b-ce75-4074-aaf9-375ce9a6f986",
+    "user_id": "6b77d97e-31ab-4dbe-bc36-11da530590ea",
+    "title": "weekend in yaounde",
+    "items": [
+      {
+        "destination_id": "dest-012",
+        "day": 1
+      },
+      {
+        "destination_id": "dest-006",
+        "day": 2
+      }
+    ],
+    "shared_with": []
   }
 ]

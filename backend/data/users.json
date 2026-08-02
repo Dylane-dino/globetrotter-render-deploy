@@ -30,5 +30,39 @@
     "preferred_tags": [],
     "budget_level": "medium",
     "password_hash": "$2b$12$/FcNQeOn/1y0M8Srlgf3euVsHs02.1lVY9LEP.cpPRZXsYcz5vWsC"
+  },
+  {
+    "id": "30102579-cf3f-44ea-8f8e-9ed50a822351",
+    "name": "younga dilane",
+    "email": "younga.aime@ictuniversity.edu.cm",
+    "preferred_tags": [
+      "market",
+      "shopping",
+      "crafts",
+      "souvenirs",
+      "local-life",
+      "lake",
+      "garden",
+      "relaxation",
+      "wildlife",
+      "family-friendly"
+    ],
+    "budget_level": "medium",
+    "password_hash": "$2b$12$1cP5f8UT6OVS/YRNsCRVNuGbZcbUiV6ofKpgXE5E7JQR0R6lAyQAK"
+  },
+  {
+    "id": "6b77d97e-31ab-4dbe-bc36-11da530590ea",
+    "name": "jhon taga",
+    "email": "jhon@gmail.com",
+    "preferred_tags": [
+      "church",
+      "landmark",
+      "photography",
+      "hiking",
+      "outdoor",
+      "fitness"
+    ],
+    "budget_level": "medium",
+    "password_hash": "$2b$12$cs6C30nkSM7hBHl1cpmxvOCPcvZ.HIabOynMCr1PUwnrhcc2C49ye"
   }
 ]
