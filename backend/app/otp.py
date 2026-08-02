@@ -2,24 +2,48 @@
 import os
 import secrets
 import smtplib
+from html import escape
 from datetime import datetime, timedelta, timezone
 from email.message import EmailMessage
+from email.utils import formataddr
 
 from fastapi import HTTPException
 
 _codes: dict[str, tuple[str, datetime]] = {}
 
 
-def issue(email: str) -> int:
+def issue(email: str, name: str | None = None) -> int:
+    """Create and deliver a verification code, addressing the user by name."""
     code = f"{secrets.randbelow(1_000_000):06d}"
     _codes[email.lower()] = (code, datetime.now(timezone.utc) + timedelta(minutes=5))
     host = os.environ.get("SMTP_HOST")
     if host:
         message = EmailMessage()
-        message["Subject"] = "Your GlobeTrotter verification code"
-        message["From"] = os.environ.get("SMTP_FROM", "no-reply@globetrotter.local")
+        smtp_from = os.environ.get("SMTP_FROM", "no-reply@globetrotter.local")
+        greeting_name = name.strip() if name and name.strip() else "there"
+        html_greeting_name = escape(greeting_name)
+        message["Subject"] = "Verify your account"
+        message["From"] = formataddr(("GlobalTrotter", smtp_from))
         message["To"] = email
-        message.set_content(f"Your GlobeTrotter code is {code}. It expires in 5 minutes.")
+        message.set_content(
+            f"Verify your account\n\nHi {greeting_name},\n\n"
+            f"Your code is:\n\n{code}\n\nThis code expires in 5 minutes."
+        )
+        message.add_alternative(
+            f"""<!doctype html>
+<html lang=\"en\">
+  <body style=\"margin:0;font-family:Arial,sans-serif;color:#1f2937;\">
+    <main style=\"max-width:520px;margin:0 auto;padding:32px 24px;\">
+      <h1 style=\"margin:0 0 24px;font-size:24px;\">Verify your account</h1>
+      <p>Hi {html_greeting_name},</p>
+      <p>Your code is:</p>
+      <p style=\"margin:24px 0;font-size:32px;font-weight:700;letter-spacing:2px;\">{code}</p>
+      <p style=\"color:#6b7280;font-size:14px;\">This code expires in 5 minutes.</p>
+    </main>
+  </body>
+</html>""",
+            subtype="html",
+        )
         try:
             with smtplib.SMTP(host, int(os.environ.get("SMTP_PORT", "587")), timeout=10) as client:
                 if os.environ.get("SMTP_TLS", "true").lower() == "true": client.starttls()

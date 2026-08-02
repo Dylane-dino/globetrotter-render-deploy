@@ -63,6 +63,25 @@
       "fitness"
     ],
     "budget_level": "medium",
-    "password_hash": "$2b$12$cs6C30nkSM7hBHl1cpmxvOCPcvZ.HIabOynMCr1PUwnrhcc2C49ye"
+    "password_hash": "$2b$12$cs6C30nkSM7hBHl1cpmxvOCPcvZ.HIabOynMCr1PUwnrhcc2C49ye",
+    "favorites": []
+  },
+  {
+    "id": "75c2d299-56f5-4164-8bbc-23368041369e",
+    "name": "sanama audre",
+    "email": "kembangsanamaaudreyverouchka@gmail.com",
+    "preferred_tags": [
+      "hiking",
+      "outdoor",
+      "fitness",
+      "local-cuisine",
+      "dining",
+      "international"
+    ],
+    "budget_level": "medium",
+    "bio": "",
+    "avatar_url": null,
+    "favorites": [],
+    "password_hash": "$2b$12$eGSiplHy7umnB7P2OMeFGO7vYPGrL.VT.LDLqZkpRGJp2dLPNLPF."
   }
 ]

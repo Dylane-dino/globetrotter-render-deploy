@@ -1,0 +1,11 @@
+[
+  {
+    "id": "d87d9e8e-e7ca-425b-b011-88163f4681a2",
+    "destination_id": "dest-011",
+    "user_id": "6b77d97e-31ab-4dbe-bc36-11da530590ea",
+    "user_name": "jhon taga",
+    "rating": 4,
+    "comment": "nice",
+    "created_at": "2026-08-02T21:45:11.657018+00:00"
+  }
+]
