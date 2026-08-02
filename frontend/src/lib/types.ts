@@ -10,6 +10,9 @@ export interface Destination {
   lat: number;
   lng: number;
   images: string[];
+  review_count: number;
+  like_count: number;
+  liked_by_current_user: boolean;
 }
 
 export interface RecommendedDestination extends Destination {
@@ -22,6 +25,9 @@ export interface User {
   email: string;
   preferred_tags: string[];
   budget_level: "low" | "medium" | "high" | string;
+  bio: string;
+  avatar_url?: string | null;
+  favorites: string[];
 }
 
 export interface AuthResponse {
@@ -29,6 +35,8 @@ export interface AuthResponse {
   token_type: string;
   user: User;
 }
+export interface OtpChallenge { email: string; expires_in_seconds: number; message: string; }
+export interface DestinationReview { id: string; destination_id: string; user_id: string; user_name: string; rating: number; comment: string; created_at: string; }
 
 export interface ItineraryItem {
   destination_id: string;

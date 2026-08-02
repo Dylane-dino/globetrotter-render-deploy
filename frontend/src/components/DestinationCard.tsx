@@ -1,72 +1,23 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
-import { Star } from "lucide-react";
+import { Bookmark, Heart, Star } from "lucide-react";
+import { useState } from "react";
+import * as api from "@/lib/api";
+import { useAuth } from "@/context/AuthContext";
+import { useToast } from "@/components/ToastProvider";
 import type { Destination } from "@/lib/types";
 
-const CATEGORY_LABELS: Record<string, string> = {
-  nature: "Nature",
-  history: "History",
-  culture: "Culture",
-  shopping: "Shopping",
-  religious: "Religious Site",
-  food: "Restaurant",
-  restaurant: "Restaurant",
-  hotel: "Hotel",
-  hospital: "Health",
-};
+const labels: Record<string, string> = { nature: "Nature", history: "History", culture: "Culture", shopping: "Shopping", religious: "Religious Site", food: "Restaurant", restaurant: "Restaurant", hotel: "Hotel", hospital: "Health" };
+const cost = (value: number) => value === 0 ? "Free" : `${value.toLocaleString()} FCFA`;
 
-function formatCost(fcfa: number): string {
-  if (fcfa === 0) return "Free";
-  return `${fcfa.toLocaleString()} FCFA`;
-}
-
-export default function DestinationCard({
-  destination,
-}: {
-  destination: Destination;
-}) {
-  const image = destination.images?.[0]
-    ? `/images/${destination.images[0]}`
-    : null;
-
-  return (
-    <Link
-      href={`/destinations/${destination.id}`}
-      className="group flex flex-col rounded-card overflow-hidden bg-white shadow-card hover:shadow-lifted transition-shadow duration-200"
-    >
-      <div className="relative aspect-[4/3] bg-canopy/10 overflow-hidden">
-        {image && (
-          <Image
-            src={image}
-            alt={destination.name}
-            fill
-            className="object-cover group-hover:scale-105 transition-transform duration-300"
-            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-          />
-        )}
-        <span className="absolute top-3 left-3 font-stamp text-[10px] uppercase tracking-wider bg-canopy-dark/80 text-ivory px-2 py-1 rounded-full">
-          {CATEGORY_LABELS[destination.category] || destination.category}
-        </span>
-      </div>
-
-      <div className="flex flex-col gap-1.5 p-4">
-        <h3 className="font-display font-semibold text-ink text-lg leading-tight">
-          {destination.name}
-        </h3>
-        <p className="text-sm text-ink/50">{destination.neighborhood}</p>
-
-        <div className="flex items-center justify-between mt-1.5">
-          <div className="flex items-center gap-1 text-marigold-dark">
-            <Star size={14} fill="currentColor" strokeWidth={0} />
-            <span className="text-sm font-semibold text-ink/80">
-              {destination.rating.toFixed(1)}
-            </span>
-          </div>
-          <span className="text-sm font-medium text-canopy/70">
-            {formatCost(destination.avg_cost_fcfa)}
-          </span>
-        </div>
-      </div>
-    </Link>
-  );
+export default function DestinationCard({ destination, onUpdate }: { destination: Destination; onUpdate?: (destination: Destination) => void }) {
+  const { token, user, updateUser } = useAuth(); const toast = useToast();
+  const [busy, setBusy] = useState(false); const [liked, setLiked] = useState(destination.liked_by_current_user); const [likes, setLikes] = useState(destination.like_count); const [favorite, setFavorite] = useState(Boolean(user?.favorites.includes(destination.id)));
+  const image = destination.images?.[0] ? `/images/${destination.images[0]}` : null;
+  const session = () => { if (token && user) return true; toast.error("Please sign in to save or like places."); return false; };
+  async function like(event: React.MouseEvent<HTMLButtonElement>) { event.preventDefault(); event.stopPropagation(); if (!session() || !token) return; setBusy(true); try { const result = await api.toggleLike(destination.id, token); setLiked(result.liked); setLikes(result.like_count); onUpdate?.({ ...destination, liked_by_current_user: result.liked, like_count: result.like_count }); toast.success(result.liked ? "Place liked." : "Like removed."); } catch (error) { toast.error(error instanceof Error ? error.message : "Could not update like."); } finally { setBusy(false); } }
+  async function save(event: React.MouseEvent<HTMLButtonElement>) { event.preventDefault(); event.stopPropagation(); if (!session() || !token || !user) return; setBusy(true); try { const result = await api.toggleFavorite(destination.id, token); setFavorite(result.favorite); updateUser({ ...user, favorites: result.favorites }); toast.success(result.favorite ? "Saved to your favorites." : "Removed from favorites."); } catch (error) { toast.error(error instanceof Error ? error.message : "Could not update favorite."); } finally { setBusy(false); } }
+  return <article className="group relative flex flex-col overflow-hidden rounded-card bg-white shadow-card transition-shadow hover:shadow-lifted"><Link href={`/destinations/${destination.id}`} className="flex flex-1 flex-col focus:outline-none focus-visible:ring-2 focus-visible:ring-laterite"><div className="relative aspect-[4/3] overflow-hidden bg-canopy/10">{image && <Image src={image} alt={destination.name} fill className="object-cover transition-transform duration-300 group-hover:scale-105" sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw" />}<span className="absolute left-3 top-3 rounded-full bg-canopy-dark/80 px-2 py-1 font-stamp text-[10px] uppercase tracking-wider text-ivory">{labels[destination.category] || destination.category}</span></div><div className="flex flex-1 flex-col gap-1.5 p-4"><h3 className="font-display text-lg font-semibold leading-tight text-ink">{destination.name}</h3><p className="text-sm text-ink/50">{destination.neighborhood}</p><div className="mt-1.5 flex items-center justify-between"><div className="flex items-center gap-1 text-marigold-dark"><Star size={14} fill="currentColor" strokeWidth={0} /><span className="text-sm font-semibold text-ink/80">{destination.rating.toFixed(1)}</span><span className="text-xs text-ink/45">({destination.review_count})</span></div><span className="text-sm font-medium text-canopy/70">{cost(destination.avg_cost_fcfa)}</span></div></div></Link><div className="absolute right-3 top-3 flex gap-1.5"><button type="button" onClick={like} disabled={busy} aria-label={liked ? "Remove like" : "Like destination"} className={`flex items-center gap-1 rounded-full p-2 shadow-sm backdrop-blur ${liked ? "bg-laterite text-white" : "bg-white/90 text-canopy"}`}><Heart size={16} fill={liked ? "currentColor" : "none"} /><span className="text-xs font-semibold">{likes}</span></button><button type="button" onClick={save} disabled={busy} aria-label={favorite ? "Remove from favorites" : "Save destination"} className={`rounded-full p-2 shadow-sm backdrop-blur ${favorite ? "bg-canopy text-white" : "bg-white/90 text-canopy"}`}><Bookmark size={16} fill={favorite ? "currentColor" : "none"} /></button></div></article>;
 }

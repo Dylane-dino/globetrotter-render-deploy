@@ -14,14 +14,16 @@ interface AuthContextValue {
   user: User | null;
   token: string | null;
   isLoading: boolean;
-  login: (email: string, password: string) => Promise<void>;
+  login: (email: string, password: string) => Promise<import("@/lib/types").OtpChallenge>;
   signup: (payload: {
     name: string;
     email: string;
     password: string;
     preferred_tags: string[];
     budget_level?: string;
-  }) => Promise<void>;
+  }) => Promise<import("@/lib/types").OtpChallenge>;
+  verifyOtp: (email: string, code: string) => Promise<void>;
+  updateUser: (user: User) => void;
   logout: () => void;
 }
 
@@ -70,8 +72,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   async function login(email: string, password: string) {
-    const res = await api.login({ email, password });
-    persist(res.access_token, res.user);
+    return api.login({ email, password });
   }
 
   async function signup(payload: {
@@ -81,9 +82,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     preferred_tags: string[];
     budget_level?: string;
   }) {
-    const res = await api.signup(payload);
-    persist(res.access_token, res.user);
+    return api.signup(payload);
   }
+  async function verifyOtp(email: string, code: string) { const res = await api.verifyOtp(email, code); persist(res.access_token, res.user); }
+  function updateUser(nextUser: User) { if (token) persist(token, nextUser); }
 
   function logout() {
     setToken(null);
@@ -93,7 +95,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   return (
     <AuthContext.Provider
-      value={{ user, token, isLoading, login, signup, logout }}
+      value={{ user, token, isLoading, login, signup, verifyOtp, updateUser, logout }}
     >
       {children}
     </AuthContext.Provider>

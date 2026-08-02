@@ -7,13 +7,14 @@ import Link from "next/link";
 import { ArrowLeft, Star, MapPin, Wallet } from "lucide-react";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import Navbar from "@/components/Navbar";
-import Spinner from "@/components/Spinner";
 import Button from "@/components/Button";
 import AddToItineraryModal from "@/components/AddToItineraryModal";
 import * as api from "@/lib/api";
 import type { Destination } from "@/lib/types";
 import DestinationMap from "@/components/DestinationMap";
 import TravelPlanner from "@/components/TravelPlanner";
+import DestinationInteractions from "@/components/DestinationInteractions";
+import { useAuth } from "@/context/AuthContext";
 
 const CATEGORY_LABELS: Record<string, string> = {
   nature: "Nature",
@@ -40,22 +41,21 @@ function DestinationDetailContent() {
   const [notFound, setNotFound] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const { token } = useAuth();
 
   useEffect(() => {
     api
-      .getDestination(params.id)
+      .getDestination(params.id, token)
       .then(setDestination)
       .catch(() => setNotFound(true))
       .finally(() => setIsLoading(false));
-  }, [params.id]);
+  }, [params.id, token]);
 
   if (isLoading) {
     return (
       <div className="min-h-screen bg-ivory">
         <Navbar />
-        <div className="py-24 flex justify-center">
-          <Spinner label="Loading destination" />
-        </div>
+        <div className="mx-auto grid max-w-6xl grid-cols-1 gap-6 px-4 py-10 md:grid-cols-3"><div className="md:col-span-2 h-64 animate-pulse rounded-card bg-canopy/10" /><div className="h-64 animate-pulse rounded-card bg-canopy/10" /><div className="md:col-span-3 h-40 animate-pulse rounded-card bg-canopy/10" /></div>
       </div>
     );
   }
@@ -181,6 +181,7 @@ function DestinationDetailContent() {
           </aside>
         </div>
         <TravelPlanner destination={destination} />
+        <DestinationInteractions destination={destination} onUpdate={setDestination} />
         <DestinationMap name={destination.name} latitude={destination.lat} longitude={destination.lng} />
       </main>
 

@@ -6,7 +6,6 @@ import Navbar from "@/components/Navbar";
 import HomeHero from "@/components/HomeHero";
 import DestinationCard from "@/components/DestinationCard";
 import SearchAndFilter from "@/components/SearchAndFilter";
-import Spinner from "@/components/Spinner";
 import { useAuth } from "@/context/AuthContext";
 import * as api from "@/lib/api";
 import type { Destination, RecommendedDestination } from "@/lib/types";
@@ -21,6 +20,10 @@ function DestinationRow({ destinations }: { destinations: Destination[] }) {
       ))}
     </div>
   );
+}
+
+function DestinationGridSkeleton({ count = 5 }: { count?: number }) {
+  return <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 sm:gap-5 lg:grid-cols-5">{Array.from({ length: count }, (_, index) => <div key={index} className="overflow-hidden rounded-card bg-white shadow-card"><div className="aspect-[4/3] animate-pulse bg-canopy/10" /><div className="space-y-2 p-4"><div className="h-5 w-3/4 animate-pulse rounded bg-canopy/10" /><div className="h-4 w-1/2 animate-pulse rounded bg-canopy/10" /><div className="h-4 w-full animate-pulse rounded bg-canopy/10" /></div></div>)}</div>;
 }
 
 function HomeContent() {
@@ -40,7 +43,7 @@ function HomeContent() {
     setError(null);
 
     Promise.all([
-      api.getDestinations(),
+      api.getDestinations(undefined, token),
       api.getRecommendations({ user_id: user.id, limit: 6 }),
     ])
       .then(([destinations, recs]) => {
@@ -103,9 +106,7 @@ function HomeContent() {
 
       <main className="max-w-6xl mx-auto px-4 sm:px-6 py-10 sm:py-14">
         {isLoading ? (
-          <div className="py-20 flex justify-center">
-            <Spinner label="Loading destinations" />
-          </div>
+          <div className="space-y-14 py-3"><DestinationGridSkeleton /><DestinationGridSkeleton count={4} /></div>
         ) : (
           <>
             {error && (

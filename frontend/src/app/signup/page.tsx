@@ -12,12 +12,13 @@ import InterestPicker from "@/components/InterestPicker";
 import { useAuth } from "@/context/AuthContext";
 import { ApiError } from "@/lib/api";
 import { INTEREST_OPTIONS } from "@/lib/interests";
+import OtpVerification from "@/components/OtpVerification";
 
 const MIN_INTERESTS = 2;
 
 export default function SignupPage() {
   const router = useRouter();
-  const { signup, user, isLoading: sessionLoading } = useAuth();
+  const { signup, verifyOtp, user, isLoading: sessionLoading } = useAuth();
 
   const [step, setStep] = useState<1 | 2>(1);
   const [name, setName] = useState("");
@@ -27,6 +28,7 @@ export default function SignupPage() {
   const [selectedInterests, setSelectedInterests] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [otpEmail, setOtpEmail] = useState<string | null>(null);
 
   useEffect(() => {
     if (!sessionLoading && user) {
@@ -66,14 +68,14 @@ export default function SignupPage() {
           )
         )
       );
-      await signup({
+      const challenge = await signup({
         name,
         email,
         password,
         preferred_tags: tags,
         budget_level: "medium",
       });
-      router.push("/home");
+      setOtpEmail(challenge.email);
     } catch (err) {
       setError(
         err instanceof ApiError
@@ -86,8 +88,7 @@ export default function SignupPage() {
   }
 
   if (step === 2) {
-    return (
-      <div className="min-h-screen bg-ivory">
+    return <><div className="min-h-screen bg-ivory">
         <div className="max-w-3xl mx-auto px-6 py-10 md:py-16">
           <div className="mb-8">
             <Logo size="sm" />
@@ -133,8 +134,7 @@ export default function SignupPage() {
             </Button>
           </div>
         </div>
-      </div>
-    );
+      </div>{otpEmail && <OtpVerification email={otpEmail} onClose={() => setOtpEmail(null)} onVerify={async (code) => { await verifyOtp(otpEmail, code); router.push("/home"); }} />}</>;
   }
 
   return (

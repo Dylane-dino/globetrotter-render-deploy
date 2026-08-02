@@ -77,3 +77,15 @@ def get_current_user(authorization: str | None = Header(default=None)) -> dict:
     if not user:
         raise HTTPException(status_code=401, detail="User no longer exists")
     return user
+
+
+def get_optional_user(authorization: str | None = Header(default=None)) -> dict | None:
+    """Return the signed-in user when a bearer token was supplied.
+
+    Public destination endpoints can use this to include per-user fields such
+    as ``liked_by_current_user`` without making browsing require a session.
+    Invalid supplied tokens still fail normally instead of being ignored.
+    """
+    if not authorization:
+        return None
+    return get_current_user(authorization)

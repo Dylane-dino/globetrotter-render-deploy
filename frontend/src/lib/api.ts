@@ -7,6 +7,7 @@ import type {
   User,
   CommunityPost,
   ChatResponse, ChatHistoryItem,
+  OtpChallenge, DestinationReview,
 } from "./types";
 
 // Keep browser calls same-origin. The Next route handler forwards requests to
@@ -96,8 +97,8 @@ export function signup(payload: {
   password: string;
   preferred_tags: string[];
   budget_level?: string;
-}): Promise<AuthResponse> {
-  return request<AuthResponse>("/auth/signup", {
+}): Promise<OtpChallenge> {
+  return request<OtpChallenge>("/auth/signup", {
     method: "POST",
     body: JSON.stringify(payload),
   });
@@ -106,12 +107,15 @@ export function signup(payload: {
 export function login(payload: {
   email: string;
   password: string;
-}): Promise<AuthResponse> {
-  return request<AuthResponse>("/auth/login", {
+}): Promise<OtpChallenge> {
+  return request<OtpChallenge>("/auth/login", {
     method: "POST",
     body: JSON.stringify(payload),
   });
 }
+export function verifyOtp(email: string, code: string): Promise<AuthResponse> { return request<AuthResponse>("/auth/verify-otp", { method: "POST", body: JSON.stringify({ email, code }) }); }
+export function sendOtp(email: string): Promise<OtpChallenge> { return request<OtpChallenge>("/auth/send-otp", { method: "POST", body: JSON.stringify({ email }) }); }
+export function updateProfile(payload: { name: string; bio: string; avatar_url?: string | null; preferred_tags: string[] }, token: string): Promise<User> { return request<User>("/auth/profile", { method: "PUT", body: JSON.stringify(payload) }, token); }
 
 export function getMe(token: string): Promise<User> {
   return request<User>("/auth/me", {}, token);
@@ -123,18 +127,23 @@ export function getDestinations(params?: {
   q?: string;
   category?: string;
   tag?: string;
-}): Promise<Destination[]> {
+}, token?: string | null): Promise<Destination[]> {
   const search = new URLSearchParams();
   if (params?.q) search.set("q", params.q);
   if (params?.category) search.set("category", params.category);
   if (params?.tag) search.set("tag", params.tag);
   const qs = search.toString();
-  return requestArray<Destination>(`/destinations${qs ? `?${qs}` : ""}`);
+  return requestArray<Destination>(`/destinations${qs ? `?${qs}` : ""}`, {}, token);
 }
 
-export function getDestination(id: string): Promise<Destination> {
-  return request<Destination>(`/destinations/${id}`);
+export function getDestination(id: string, token?: string | null): Promise<Destination> {
+  return request<Destination>(`/destinations/${id}`, {}, token);
 }
+export function getReviews(id: string): Promise<DestinationReview[]> { return requestArray<DestinationReview>(`/destinations/${id}/reviews`); }
+export function addReview(id: string, payload: { rating: number; comment: string }, token: string): Promise<DestinationReview> { return request<DestinationReview>(`/destinations/${id}/reviews`, { method: "POST", body: JSON.stringify(payload) }, token); }
+export function toggleLike(id: string, token: string): Promise<{ liked: boolean; like_count: number }> { return request(`/destinations/${id}/like`, { method: "POST" }, token); }
+export function getFavorites(token: string): Promise<Destination[]> { return requestArray<Destination>("/users/favorites", {}, token); }
+export function toggleFavorite(id: string, token: string): Promise<{ favorite: boolean; favorites: string[] }> { return request(`/users/favorites/${id}`, { method: "POST" }, token); }
 
 // ---- Recommendations ----
 

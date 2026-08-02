@@ -15,6 +15,9 @@ class Destination(BaseModel):
     lat: float
     lng: float
     images: list[str] = []
+    review_count: int = 0
+    like_count: int = 0
+    liked_by_current_user: bool = False
 
 
 class UserCreate(BaseModel):
@@ -41,6 +44,9 @@ class User(BaseModel):
     email: str
     preferred_tags: list[str] = []
     budget_level: str = "medium"
+    bio: str = ""
+    avatar_url: str | None = None
+    favorites: list[str] = []
 
 
 class LoginRequest(BaseModel):
@@ -48,10 +54,57 @@ class LoginRequest(BaseModel):
     password: str
 
 
+class ProfileUpdate(BaseModel):
+    name: str = Field(min_length=1, max_length=100)
+    bio: str = Field(default="", max_length=500)
+    avatar_url: str | None = Field(default=None, max_length=2048)
+    preferred_tags: list[str] = Field(default=[], max_length=20)
+
+
+class OtpSendRequest(BaseModel):
+    email: str
+
+
+class OtpVerifyRequest(BaseModel):
+    email: str
+    code: str = Field(pattern=r"^\d{6}$")
+
+
+class OtpChallenge(BaseModel):
+    email: str
+    expires_in_seconds: int = 300
+    message: str
+
+
 class TokenResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"
     user: User
+
+
+class ReviewCreate(BaseModel):
+    rating: int = Field(ge=1, le=5)
+    comment: str = Field(min_length=1, max_length=2000)
+
+
+class DestinationReview(BaseModel):
+    id: str
+    destination_id: str
+    user_id: str
+    user_name: str
+    rating: int
+    comment: str
+    created_at: str
+
+
+class LikeResponse(BaseModel):
+    liked: bool
+    like_count: int
+
+
+class FavoriteResponse(BaseModel):
+    favorite: bool
+    favorites: list[str]
 
 
 class ItineraryItem(BaseModel):

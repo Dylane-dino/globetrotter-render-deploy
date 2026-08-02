@@ -40,6 +40,7 @@ export default function Navbar() {
           {navLink("/home", "Home")}
           {navLink("/community", "Community")}
           {navLink("/itineraries", "My Trips")}
+          {navLink("/profile", "Profile")}
         </nav>
 
         <div className="flex items-center gap-3">

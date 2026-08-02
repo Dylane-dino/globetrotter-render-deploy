@@ -1,0 +1,6 @@
+"use client";
+import { createContext, useContext, useState, type ReactNode } from "react";
+type Toast = { id: number; message: string; kind: "success" | "error" };
+const ToastContext = createContext<{ success: (message: string) => void; error: (message: string) => void } | null>(null);
+export function ToastProvider({ children }: { children: ReactNode }) { const [toasts, setToasts] = useState<Toast[]>([]); const add = (message: string, kind: Toast["kind"]) => { const id = Date.now(); setToasts((items) => [...items, { id, message, kind }]); window.setTimeout(() => setToasts((items) => items.filter((item) => item.id !== id)), 3500); }; return <ToastContext.Provider value={{ success: (m) => add(m, "success"), error: (m) => add(m, "error") }}>{children}<div className="fixed right-4 top-4 z-[100] space-y-2">{toasts.map((t) => <div key={t.id} className={`max-w-sm rounded-lg px-4 py-3 text-sm font-medium text-white shadow-lifted ${t.kind === "success" ? "bg-canopy" : "bg-laterite"}`}>{t.message}</div>)}</div></ToastContext.Provider>; }
+export function useToast() { const toast = useContext(ToastContext); if (!toast) throw new Error("useToast must be used inside ToastProvider"); return toast; }
