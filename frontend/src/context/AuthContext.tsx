@@ -14,7 +14,7 @@ interface AuthContextValue {
   user: User | null;
   token: string | null;
   isLoading: boolean;
-  login: (email: string, password: string) => Promise<import("@/lib/types").OtpChallenge>;
+  login: (email: string, password: string) => Promise<void>;
   signup: (payload: {
     name: string;
     email: string;
@@ -72,7 +72,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   async function login(email: string, password: string) {
-    return api.login({ email, password });
+    const result = await api.login({ email, password });
+    persist(result.access_token, result.user);
   }
 
   async function signup(payload: {

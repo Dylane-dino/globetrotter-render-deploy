@@ -1,3 +1,8 @@
+def _verify_signup(client, email):
+    from app import otp
+    return client.post("/auth/verify-otp", json={"email": email, "code": otp._codes[email.lower()][0]})
+
+
 def test_signup_success(client, unique_email):
     res = client.post(
         "/auth/signup",
@@ -10,10 +15,12 @@ def test_signup_success(client, unique_email):
     )
     assert res.status_code == 201
     body = res.json()
-    assert body["access_token"]
-    assert body["user"]["email"] == unique_email
-    assert "password" not in body["user"]
-    assert "password_hash" not in body["user"]
+    assert body["email"] == unique_email
+    assert body["expires_in_seconds"] == 300
+    verified = _verify_signup(client, unique_email)
+    assert verified.status_code == 200
+    assert verified.json()["access_token"]
+    assert verified.json()["user"]["email"] == unique_email
 
 
 def test_signup_duplicate_email_conflicts(client, unique_email):
@@ -38,11 +45,18 @@ def test_login_success(client, unique_email):
         "/auth/signup",
         json={"name": "Ada", "email": unique_email, "password": "securepass1"},
     )
+    _verify_signup(client, unique_email)
     res = client.post(
         "/auth/login", json={"email": unique_email, "password": "securepass1"}
     )
     assert res.status_code == 200
     assert res.json()["access_token"]
+
+
+def test_login_requires_verified_signup(client, unique_email):
+    client.post("/auth/signup", json={"name": "Ada", "email": unique_email, "password": "securepass1"})
+    res = client.post("/auth/login", json={"email": unique_email, "password": "securepass1"})
+    assert res.status_code == 403
 
 
 def test_login_wrong_password(client, unique_email):

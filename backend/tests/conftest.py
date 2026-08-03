@@ -29,6 +29,7 @@ import pytest  # noqa: E402
 from fastapi.testclient import TestClient  # noqa: E402
 
 from app.main import app  # noqa: E402
+from app import otp  # noqa: E402
 
 
 @pytest.fixture()
@@ -57,5 +58,8 @@ def signed_up_user(client, unique_email):
         },
     )
     assert res.status_code == 201, res.text
-    body = res.json()
+    code = otp._codes[unique_email.lower()][0]
+    verified = client.post("/auth/verify-otp", json={"email": unique_email, "code": code})
+    assert verified.status_code == 200, verified.text
+    body = verified.json()
     return body["access_token"], body["user"]

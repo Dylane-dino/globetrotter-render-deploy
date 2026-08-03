@@ -9,17 +9,15 @@ import Button from "@/components/Button";
 import ErrorBanner from "@/components/ErrorBanner";
 import { useAuth } from "@/context/AuthContext";
 import { ApiError } from "@/lib/api";
-import OtpVerification from "@/components/OtpVerification";
 
 export default function LoginPage() {
   const router = useRouter();
-  const { login, verifyOtp, user, isLoading: sessionLoading } = useAuth();
+  const { login, user, isLoading: sessionLoading } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showForgotNote, setShowForgotNote] = useState(false);
-  const [otpEmail, setOtpEmail] = useState<string | null>(null);
 
   useEffect(() => {
     if (!sessionLoading && user) {
@@ -32,8 +30,8 @@ export default function LoginPage() {
     setError(null);
     setIsSubmitting(true);
     try {
-      const challenge = await login(email, password);
-      setOtpEmail(challenge.email);
+      await login(email, password);
+      router.replace("/home");
     } catch (err) {
       setError(
         err instanceof ApiError
@@ -111,6 +109,6 @@ export default function LoginPage() {
           Create an Account
         </Link>
       </p>
-    </AuthShell>{otpEmail && <OtpVerification email={otpEmail} onClose={() => setOtpEmail(null)} onVerify={async (code) => { await verifyOtp(otpEmail, code); router.push("/home"); }} />}
+    </AuthShell>
   </>;
 }

@@ -142,11 +142,14 @@ def test_user_itineraries_listing(client, signed_up_user):
 
 def _signup_second_user(client):
     import uuid
+    from app import otp
 
     email = f"other-{uuid.uuid4().hex[:10]}@example.com"
     res = client.post(
         "/auth/signup",
         json={"name": "Other User", "email": email, "password": "otherpass1"},
     )
-    body = res.json()
+    verified = client.post("/auth/verify-otp", json={"email": email, "code": otp._codes[email.lower()][0]})
+    assert verified.status_code == 200, verified.text
+    body = verified.json()
     return body["access_token"], body["user"]

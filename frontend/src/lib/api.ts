@@ -107,8 +107,8 @@ export function signup(payload: {
 export function login(payload: {
   email: string;
   password: string;
-}): Promise<OtpChallenge> {
-  return request<OtpChallenge>("/auth/login", {
+}): Promise<AuthResponse> {
+  return request<AuthResponse>("/auth/login", {
     method: "POST",
     body: JSON.stringify(payload),
   });

@@ -17,22 +17,28 @@ def signup(payload: UserCreate):
     existing = [u for u in storage.read_all("users") if u["email"].lower() == payload.email.lower()]
     if existing:
         raise HTTPException(status_code=409, detail="An account with this email already exists")
-    storage.append("users", {"id": str(uuid.uuid4()), "name": payload.name, "email": payload.email, "preferred_tags": payload.preferred_tags, "budget_level": payload.budget_level, "bio": "", "avatar_url": None, "favorites": [], "password_hash": auth.hash_password(payload.password)})
+    storage.append("users", {"id": str(uuid.uuid4()), "name": payload.name, "email": payload.email, "preferred_tags": payload.preferred_tags, "budget_level": payload.budget_level, "bio": "", "avatar_url": None, "favorites": [], "is_verified": False, "password_hash": auth.hash_password(payload.password)})
     return _challenge(payload.email, "Verification code sent. Enter it to finish creating your account.", payload.name)
 
 
-@router.post("/login", response_model=OtpChallenge)
+@router.post("/login", response_model=TokenResponse)
 def login(payload: LoginRequest):
     user = next((u for u in storage.read_all("users") if u["email"].lower() == payload.email.lower()), None)
     if not user or not auth.verify_password(payload.password, user["password_hash"]):
         raise HTTPException(status_code=401, detail="Incorrect email or password")
-    return _challenge(user["email"], "Verification code sent. Enter it to sign in.", user.get("name"))
+    # Accounts created before email verification was introduced are treated as
+    # verified so existing users can continue to sign in without disruption.
+    if not user.get("is_verified", True):
+        raise HTTPException(status_code=403, detail="Verify your email to activate your account")
+    return TokenResponse(access_token=auth.create_access_token(user["id"]), user=User(**user))
 
 
 @router.post("/send-otp", response_model=OtpChallenge)
 def send_otp(payload: OtpSendRequest):
     user = next((u for u in storage.read_all("users") if u["email"].lower() == payload.email.lower()), None)
     if not user: raise HTTPException(status_code=404, detail="Account not found")
+    if user.get("is_verified", True):
+        raise HTTPException(status_code=409, detail="This account is already verified")
     return _challenge(user["email"], "A new verification code has been sent.", user.get("name"))
 
 
@@ -40,8 +46,11 @@ def send_otp(payload: OtpSendRequest):
 def verify_otp(payload: OtpVerifyRequest):
     user = next((u for u in storage.read_all("users") if u["email"].lower() == payload.email.lower()), None)
     if not user: raise HTTPException(status_code=404, detail="Account not found")
+    if user.get("is_verified", True):
+        raise HTTPException(status_code=409, detail="This account is already verified")
     otp.verify(user["email"], payload.code)
-    return TokenResponse(access_token=auth.create_access_token(user["id"]), user=User(**user))
+    verified_user = storage.update_by_id("users", user["id"], {"is_verified": True})
+    return TokenResponse(access_token=auth.create_access_token(user["id"]), user=User(**verified_user))
 
 
 @router.put("/profile", response_model=User)
