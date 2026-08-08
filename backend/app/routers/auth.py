@@ -1,6 +1,6 @@
 import uuid
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
 
 from app import auth, otp, storage
 from app.models import LoginRequest, OtpChallenge, OtpSendRequest, OtpVerifyRequest, ProfileUpdate, TokenResponse, User, UserCreate
@@ -8,17 +8,19 @@ from app.models import LoginRequest, OtpChallenge, OtpSendRequest, OtpVerifyRequ
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 
-def _challenge(email: str, message: str, name: str | None = None) -> OtpChallenge:
-    return OtpChallenge(email=email, expires_in_seconds=otp.issue(email, name), message=message)
+def _challenge(background_tasks: BackgroundTasks, email: str, message: str, name: str | None = None) -> OtpChallenge:
+    code = otp.issue(email)
+    background_tasks.add_task(otp.send_otp_email, email, code, name)
+    return OtpChallenge(email=email, expires_in_seconds=300, message=message)
 
 
-@router.post("/signup", response_model=OtpChallenge, status_code=201)
-def signup(payload: UserCreate):
+@router.post("/signup", response_model=OtpChallenge, status_code=200)
+def signup(payload: UserCreate, background_tasks: BackgroundTasks):
     existing = [u for u in storage.read_all("users") if u["email"].lower() == payload.email.lower()]
     if existing:
         raise HTTPException(status_code=409, detail="An account with this email already exists")
     storage.append("users", {"id": str(uuid.uuid4()), "name": payload.name, "email": payload.email, "preferred_tags": payload.preferred_tags, "budget_level": payload.budget_level, "bio": "", "avatar_url": None, "favorites": [], "is_verified": False, "password_hash": auth.hash_password(payload.password)})
-    return _challenge(payload.email, "Verification code sent. Enter it to finish creating your account.", payload.name)
+    return _challenge(background_tasks, payload.email, "Verification code sent. Enter it to finish creating your account.", payload.name)
 
 
 @router.post("/login", response_model=TokenResponse)
@@ -34,12 +36,12 @@ def login(payload: LoginRequest):
 
 
 @router.post("/send-otp", response_model=OtpChallenge)
-def send_otp(payload: OtpSendRequest):
+def send_otp(payload: OtpSendRequest, background_tasks: BackgroundTasks):
     user = next((u for u in storage.read_all("users") if u["email"].lower() == payload.email.lower()), None)
     if not user: raise HTTPException(status_code=404, detail="Account not found")
     if user.get("is_verified", True):
         raise HTTPException(status_code=409, detail="This account is already verified")
-    return _challenge(user["email"], "A new verification code has been sent.", user.get("name"))
+    return _challenge(background_tasks, user["email"], "A new verification code has been sent.", user.get("name"))
 
 
 @router.post("/verify-otp", response_model=TokenResponse)

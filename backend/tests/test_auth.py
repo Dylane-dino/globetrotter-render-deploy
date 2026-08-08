@@ -13,7 +13,7 @@ def test_signup_success(client, unique_email):
             "preferred_tags": ["museum"],
         },
     )
-    assert res.status_code == 201
+    assert res.status_code == 200
     body = res.json()
     assert body["email"] == unique_email
     assert body["expires_in_seconds"] == 300

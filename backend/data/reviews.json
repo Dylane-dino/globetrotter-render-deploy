@@ -7,5 +7,14 @@
     "rating": 4,
     "comment": "nice",
     "created_at": "2026-08-02T21:45:11.657018+00:00"
+  },
+  {
+    "id": "7693d85e-c8b5-4e96-a69b-ac8ca575da1d",
+    "destination_id": "dest-012",
+    "user_id": "6b77d97e-31ab-4dbe-bc36-11da530590ea",
+    "user_name": "jhon taga",
+    "rating": 5,
+    "comment": "nice",
+    "created_at": "2026-08-03T12:55:36.503786+00:00"
   }
 ]

@@ -12,12 +12,22 @@ from fastapi import HTTPException
 _codes: dict[str, tuple[str, datetime]] = {}
 
 
-def issue(email: str, name: str | None = None) -> int:
-    """Create and deliver a verification code, addressing the user by name."""
+def issue(email: str) -> str:
+    """Create a short-lived verification code without performing network I/O."""
     code = f"{secrets.randbelow(1_000_000):06d}"
     _codes[email.lower()] = (code, datetime.now(timezone.utc) + timedelta(minutes=5))
+    return code
+
+
+def send_otp_email(email: str, code: str, name: str | None = None) -> None:
+    """Deliver an OTP email without allowing SMTP failures to affect requests."""
     host = os.environ.get("SMTP_HOST")
-    if host:
+    if not host:
+        # Development fallback: does not expose a code in API responses.
+        print(f"[GlobeTrotter DEV OTP] {email}: {code}")
+        return
+
+    try:
         message = EmailMessage()
         smtp_from = os.environ.get("SMTP_FROM", "no-reply@globetrotter.local")
         greeting_name = name.strip() if name and name.strip() else "there"
@@ -44,18 +54,16 @@ def issue(email: str, name: str | None = None) -> int:
 </html>""",
             subtype="html",
         )
-        try:
-            with smtplib.SMTP(host, int(os.environ.get("SMTP_PORT", "587")), timeout=10) as client:
-                if os.environ.get("SMTP_TLS", "true").lower() == "true": client.starttls()
-                username, password = os.environ.get("SMTP_USERNAME"), os.environ.get("SMTP_PASSWORD")
-                if username and password: client.login(username, password)
-                client.send_message(message)
-        except OSError as exc:
-            raise HTTPException(status_code=503, detail="Could not send the verification email.") from exc
-    else:
-        # Development fallback: does not expose a code in API responses.
-        print(f"[GlobeTrotter DEV OTP] {email}: {code}")
-    return 300
+        with smtplib.SMTP(host, int(os.environ.get("SMTP_PORT", "587")), timeout=10) as client:
+            if os.environ.get("SMTP_TLS", "true").lower() == "true":
+                client.starttls()
+            username, password = os.environ.get("SMTP_USERNAME"), os.environ.get("SMTP_PASSWORD")
+            if username and password:
+                client.login(username, password)
+            client.send_message(message)
+    except (OSError, smtplib.SMTPException, ValueError) as exc:
+        # Background delivery must never turn a completed signup into a 503.
+        print(f"[GlobeTrotter OTP] Could not send verification email to {email}: {exc}")
 
 
 def verify(email: str, code: str) -> None:

@@ -57,7 +57,7 @@ def signed_up_user(client, unique_email):
             "budget_level": "medium",
         },
     )
-    assert res.status_code == 201, res.text
+    assert res.status_code == 200, res.text
     code = otp._codes[unique_email.lower()][0]
     verified = client.post("/auth/verify-otp", json={"email": unique_email, "code": code})
     assert verified.status_code == 200, verified.text
