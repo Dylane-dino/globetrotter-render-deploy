@@ -2,6 +2,7 @@
 import os
 import secrets
 import smtplib
+import socket
 from html import escape
 from datetime import datetime, timedelta, timezone
 from email.message import EmailMessage
@@ -10,6 +11,18 @@ from email.utils import formataddr
 from fastapi import HTTPException
 
 _codes: dict[str, tuple[str, datetime]] = {}
+
+# Force DNS resolution to IPv4 (AF_INET) to prevent Errno 101 on Render,
+# whose network runner does not route outbound IPv6 SMTP connections.
+_orig_getaddrinfo = socket.getaddrinfo
+
+
+def _getaddrinfo_ipv4(*args, **kwargs):
+    responses = _orig_getaddrinfo(*args, **kwargs)
+    return [response for response in responses if response[0] == socket.AF_INET]
+
+
+socket.getaddrinfo = _getaddrinfo_ipv4
 
 
 def issue(email: str) -> str:
